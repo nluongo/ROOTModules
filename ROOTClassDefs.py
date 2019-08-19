@@ -17,7 +17,7 @@ class Layer:
     :att total_et: Total Et of layer, sum of Et of all cells in layer
     '''
     def __init__(self, cells, eta_dim, phi_dim, key = -1):
-        self.cell_et = cells / 1000
+        self.cell_et = cells
         self.eta_dim = eta_dim
         self.phi_dim = phi_dim
         self.key = key
@@ -40,12 +40,13 @@ class Event:
     :param l2_layer: Custom Layer class instance for L2
     :param l3_layer: Custom Layer class instance for L3
     :param had_layer: Custom Layer class instance for Had
-    :param mctau: Bit declaring whether to load the mctau attribute of the event
-    :param reco+et: Bit declaring whether to calculate reconstructed Et attributes of the event
+    :param mctau_yn: Bit declaring whether to load the mctau attribute of the event
+    :param reco_et_yn: Bit declaring whether to calculate reconstructed Et attributes of the event
+    :param fcore_yn: Bit declaring whether to calculate FCore attribute of the event
 
     :att total_et: Total Et of the event, sum of total_et of each layer
     '''
-    def __init__(self, tree, l0_layer, l1_layer, l2_layer, l3_layer, had_layer, mctau_yn=0, reco_et_yn = 1, fcore_yn = 1):
+    def __init__(self, tree, l0_layer, l1_layer, l2_layer, l3_layer, had_layer, mctau_yn=0, reco_et_yn = 1, fcore_yn = 0):
         self.l0_layer = l0_layer
         self.l1_layer = l1_layer
         self.l2_layer = l2_layer
@@ -246,11 +247,18 @@ class Tree:
     # Call the GetEntry() method of the input tree and assign all values to class variables of the same names
     def get_entry(self, i):
         self.root_ttree.GetEntry(i)
-        self.L0CellEt = self.root_ttree.L0CellEt
-        self.L1CellEt = self.root_ttree.L1CellEt
-        self.L2CellEt = self.root_ttree.L2CellEt
-        self.L3CellEt = self.root_ttree.L3CellEt
-        self.HadCellEt = self.root_ttree.HadCellEt
+        if hasattr(self.root_ttree, 'L0CellEt'):
+            self.L0CellEt = self.root_ttree.L0CellEt
+            self.L1CellEt = self.root_ttree.L1CellEt
+            self.L2CellEt = self.root_ttree.L2CellEt
+            self.L3CellEt = self.root_ttree.L3CellEt
+            self.HadCellEt = self.root_ttree.HadCellEt
+        if hasattr(self.root_ttree, 'L0Et'):
+            self.L0Et = self.root_ttree.L0Et
+            self.L1Et = self.root_ttree.L1Et
+            self.L2Et = self.root_ttree.L2Et
+            self.L3Et = self.root_ttree.L3Et
+            self.HadEt = self.root_ttree.HadEt
         if hasattr(self.root_ttree, 'mc_visibleTau'):
             self.mctau = self.root_ttree.mc_visibleTau
             self.true_tau_pt = self.root_ttree.mc_visibleTau.Pt()

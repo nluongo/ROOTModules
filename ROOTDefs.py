@@ -70,7 +70,7 @@ def load_root_layer_to_class(tree, layer_et, key):
     layer_class_instance = ROOTClassDefs.Layer(layer_array, eta_dim, phi_dim, key)
     return layer_class_instance
 
-def build_event_instance(tree, mctau=0, reco_et=1, fcore=1):
+def build_event_instance(tree, mctau=0, reco_et=1, fcore=0):
     '''
     Build custom Event class instance. Intended to be used after the ROOT GetEntry function is called. First creates
         custom Layer instances which are then loaded into the Event.
@@ -478,19 +478,38 @@ def apply_tree_cut(old_tree, cut_string, temp_file):
     # Load new TTree into custom Tree and return
     return ROOTClassDefs.Tree(new_tree)
 
+def tau_formatted_root_directory():
+    '''
+    :return: Predetermined directory holding formatted ROOT files for the TauTrigger project
+    '''
+    directory_path = os.path.join(os.path.expanduser('~'), 'TauTrigger', 'Formatted Data Files', 'NTuples')
+    return directory_path
 
-def get_root_file(file_name):
+def open_formatted_root_file(file_name):
     '''
     Find and return ROOT TFile object with name file_name in predetermined folder
 
     :param file_name: Name of file to open and return in predetermined folder
     :return: ROOT TFile object of file file_name
     '''
-    file_path = os.path.join(os.path.expanduser('~'), 'TauTrigger', 'Formatted Data Files', 'NTuples', file_name)
+    tau_directory_path = tau_formatted_root_directory()
+    file_path = os.path.join(tau_directory_path, file_name)
     file = ROOT.TFile(file_path)
     return file
 
-def get_root_tree(file_name, tree_name = 'mytree'):
+def recreate_formatted_root_file(file_name):
+    '''
+    Recreate ROOT TFile object with name file_name in predetermined folder
+
+    :param file_name: Name of file to open and return in predetermined folder
+    :return: ROOT TFile object of file file_name
+    '''
+    tau_directory_path = tau_formatted_root_directory()
+    file_path = os.path.join(tau_directory_path, file_name)
+    file = ROOT.TFile(file_path, 'recreate')
+    return file
+
+def get_formatted_root_tree(file_name, tree_name = 'mytree'):
     '''
     Return ROOT TTree object in file file_name with name tree_name. Calls get_root_file which looks in predetermined
         folder. This must return the TFile object as well or else the file is closed on function return and the tree
@@ -498,9 +517,9 @@ def get_root_tree(file_name, tree_name = 'mytree'):
 
     :param file_name: Name of file that tree is located
     :param tree_name: Name of tree to find and return, defaults to 'mytree'
-    :return: ROOT TTree object in given file with given name
+    :return: ROOT TTree object and ROOT TFile object in given file with given name
     '''
-    file = get_root_file(file_name)
+    file = open_formatted_root_file(file_name)
     tree = ROOTClassDefs.Tree(file.Get(tree_name))
     return tree, file
 
@@ -512,15 +531,10 @@ def get_po_signal_et_background_files():
 
     :return: Signal custom Tree instance, signal TFile, background customer Tree instance, and background TFile
     '''
-    temp_file = get_temp_root_file('temp_file.root')
-
-    tsig, fsig = get_root_tree('ztt_Output_formatted.root')
+    tsig, fsig = get_formatted_root_tree('ztt_Output_formatted.root')
     set_po_tree_parameters(tsig)
 
-    tsig = apply_tree_cut(tsig, 'event.true_tau_pt > 20000', temp_file)
-    set_po_tree_parameters(tsig)
-
-    tback, fback = get_root_tree('output_MB80_formatted.root')
+    tback, fback = get_formatted_root_tree('output_MB80_formatted.root')
 
     return tsig, fsig, tback, fback
 

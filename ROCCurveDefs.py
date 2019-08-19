@@ -82,7 +82,7 @@ def create_roc_counter(tree, netcuts, min_value, max_value, reco_true=0, et_func
         if reco_true == 0:
             event_et = event.reco_et
         else:
-            event_et = event.true_tau_pt / 1000.
+            event_et = event.true_tau_pt
 
         event_et = et_function(event_et)
 

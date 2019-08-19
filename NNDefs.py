@@ -1,45 +1,59 @@
 import os
 import numpy as np
-from tensorflow import keras
+import pandas as pd
+from tensorflow import keras, set_random_seed
 
-def build_and_train_class_nn(train_ets, train_sig_back, test_ets, test_sig_back, lr=0.1, epochs=10):
-    num_layers = len(train_ets[0])
 
-    model = keras.Sequential([
-       keras.layers.Dense(1, input_shape=(num_layers,), activation='sigmoid'),
-    ])
+def build_and_train_network(train_ets, train_sig_back, test_ets, test_sig_back, is_class_nn=True, lr=0.1, epochs=10, use_bias=True,
+                             hidden_layers=0, hidden_nodes=8, class_weight=None):
+    if isinstance(train_ets, pd.DataFrame):
+        input_nodes = len(train_ets.columns)
+    else:
+        input_nodes = len(train_ets[0])
 
-    #model = keras.Sequential([
-    #    keras.layers.Dense(8, input_shape=(num_layers,), activation='relu'),
-    #    keras.layers.Dense(1, activation='sigmoid')
-    #])
-
-    #model = keras.Sequential([
-    #    keras.layers.Dense(8, input_shape=(num_layers,), activation='relu'),
-    #    keras.layers.Dense(8, activation='relu'),
-    #    keras.layers.Dense(1, activation='sigmoid')
-    #])
+    model = build_network(is_class_nn, input_nodes, hidden_layers, hidden_nodes, use_bias)
 
     model.compile(
-        optimizer='adam',
+        optimizer=keras.optimizers.Adam(lr=lr),
         loss='binary_crossentropy',
         metrics=['accuracy']
     )
 
-    # init_predictions = model.predict(cell_ets)
-
-    # for i, val in enumerate(init_predictions):
-    #    line = str(val[0]) + ',' + str(sig_back[i][0]) + '\n'
-    #    #print(i, line)
-    #    pred_init_file.write(line)
-
-    model.fit(train_ets, train_sig_back, epochs=epochs)
+    model.fit(train_ets, train_sig_back, epochs=epochs, class_weight=class_weight)
 
     test_loss, test_acc = model.evaluate(test_ets, test_sig_back)
 
     print('Test accuracy: ', test_acc)
     
     return model
+
+def build_network(is_class_nn, input_nodes, hidden_layers, hidden_nodes, use_bias):
+    if is_class_nn == True:
+        end_activation = 'sigmoid'
+    else:
+        end_activation = None
+
+    # Create dictionary of different keras models parametrized by the number of hidden layers
+    models = {}
+
+    # Populate dictionary with models with up to two hidden layers, with the activation function of the last layer being
+    #   sigmoid if a classification network and None if a regression network
+    models[0] = keras.Sequential([
+       keras.layers.Dense(1, input_shape=(input_nodes,), activation=end_activation, use_bias=use_bias),
+    ])
+
+    models[1] = keras.Sequential([
+       keras.layers.Dense(hidden_nodes, input_shape=(input_nodes,), activation='relu'),
+       keras.layers.Dense(1, activation=end_activation)
+    ])
+
+    models[2] = keras.Sequential([
+       keras.layers.Dense(hidden_nodes, input_shape=(input_nodes,), activation='relu'),
+       keras.layers.Dense(hidden_nodes, activation='relu'),
+       keras.layers.Dense(1, activation=end_activation)
+    ])
+
+    return models[hidden_layers]
 
 def get_layer_weights_from_txt(config_num):
     '''
