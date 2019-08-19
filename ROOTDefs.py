@@ -2,7 +2,6 @@ import numpy as np
 import ROOT
 from ROOT import TH1F, TGraph, TGraph2D, TFile
 import ROOTClassDefs
-from NNDefs import prepared_flat_file_lines
 import os
 import statistics as stats
 import math
