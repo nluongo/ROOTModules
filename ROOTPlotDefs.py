@@ -1,4 +1,5 @@
 import ROOT
+from ROOT import TH1F
 
 def reco_et_tree_histogram(tree, bins, min_value, max_value):
     '''
