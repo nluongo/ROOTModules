@@ -68,6 +68,7 @@ class Event:
         #   find_l2_seed because seed information is necessary for calculating\
         self.seed_region = tree.seed_region_def
         self.seed_eta, self.seed_phi = ROOTDefs.find_et_seed(l2_layer, self.seed_region)
+        self.seed_et = l2_layer.cell_et[self.seed_eta][self.seed_phi]
 
         # Determine if the event needs to be phi-oriented, which is determined by the sum of adjacent cells for L1 + L2
         self.phi_zero_sum = l1_layer.cell_et[self.seed_eta][0] + l2_layer.cell_et[self.seed_eta][0]
