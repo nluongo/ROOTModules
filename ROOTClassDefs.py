@@ -215,6 +215,27 @@ class Tree:
         self.fcore_def = [[3, 2], [13, 3]]
         self.reco_et_layer_weights = [1, 1, 1, 1, 1]
         self.reco_et_shift = 0
+        self.iter_mctau = 0
+        self.iter_reco_et = 1
+        self.iter_fcore = 0
+
+    def __call__(self, iter_mctau=0, iter_reco_et=1, iter_fcore=0):
+        self.iter_mctau = iter_mctau
+        self.iter_reco_et = iter_reco_et
+        self.iter_fcore = iter_fcore
+        return self
+
+    def __iter__(self):
+        self.iter_n = 0
+        return self
+
+    def __next__(self):
+        if self.iter_n > self.entries:
+            raise StopIteration
+        else:
+            event = ROOTDefs.prepare_event(self, self.iter_n, self.iter_mctau, self.iter_reco_et, self.iter_fcore)
+            self.iter_n += 1
+            return event
 
     # Modify the reconstructed Et definition for the Tree
     def set_reco_et_def(self, new_reco_et_def):
