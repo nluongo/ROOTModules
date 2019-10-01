@@ -1,6 +1,7 @@
 import ROOT
 from ROOT import TGraph
-from ROOTDefs import prepare_event, prepared_flat_file_lines
+from ROOTDefs import prepare_event
+from NNDefs import prepared_flat_file_lines
 import numpy as np
 from math import exp
 

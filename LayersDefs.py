@@ -17,15 +17,15 @@ def get_signal_and_background_frames():
     :return signal_frame: Pandas dataframe holding layer Ets for signal events plus new IsSignal column set to 1
     :return background_frame: Pandas dataframe holding layer Ets for background events plus new IsSignal column set to 0
     '''
-    sig_file_path = os.path.join(tau_formatted_root_directory(), 'ztt_LayerEts.root')
+    sig_file_path = os.path.join(tau_formatted_root_directory(), os.environ['tauSigLayerFile'])
     fsig = uproot.open(sig_file_path)
 
     tsig = fsig['mytree']
-    signal_frame = tsig.arrays(['L0Et', 'L1Et', 'L2Et', 'L3Et', 'HadEt', 'TrueTauPt'], outputtype=pd.DataFrame)
+    signal_frame = tsig.arrays(['L0Et', 'L1Et', 'L2Et', 'L3Et', 'HadEt', 'TruePt'], outputtype=pd.DataFrame)
 
     signal_frame['IsSignal'] = 1
 
-    back_file_path = os.path.join(tau_formatted_root_directory(), 'MB80_LayerEts.root')
+    back_file_path = os.path.join(tau_formatted_root_directory(), os.environ['tauBackLayerFile'])
     fback = uproot.open(back_file_path)
 
     tback = fback['mytree']
@@ -174,10 +174,9 @@ def background_eff_at_target_signal_eff(signal_frame, background_frame, cut_colu
     '''
     Find the background efficiency at which the signal efficiency is equal to the given target efficiency
 
-    :param signal_eff: Numpy array of signal efficiencies after a series of cuts
-    :param background_eff: Numpy array of background efficiencies after a series of cuts
+    :param signal_frame: Pandas dataframe of signal events
+    :param background_frame: Pandas dataframe of background events
     :param cut_column: String name of the column to cut on to produce efficiencies
-    :param target_signal_eff: Efficiency of the signal at which to take the background efficiency
     :param target_signal_eff: Efficiency of the signal at which to take the background efficiency
     :return: Background efficiency when the signal achieves the target efficiency
     '''
