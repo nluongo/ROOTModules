@@ -3,7 +3,7 @@ import ROOT
 from ROOT import TH1F, TGraph, TGraph2D, TFile
 import ROOTClassDefs
 import os
-import statistics as stats
+#import statistics as stats
 import math
 from math import exp
 
@@ -481,18 +481,16 @@ def tau_formatted_root_directory():
     '''
     :return: Predetermined directory holding formatted ROOT files for the TauTrigger project
     '''
-    directory_path = os.path.join(os.path.expanduser('~'), 'TauTrigger', 'Formatted Data Files', 'NTuples')
+    directory_path = os.environ['tauDirectory']
     return directory_path
 
-def open_formatted_root_file(file_name):
+def open_formatted_root_file(file_path):
     '''
     Find and return ROOT TFile object with name file_name in predetermined folder
 
     :param file_name: Name of file to open and return in predetermined folder
     :return: ROOT TFile object of file file_name
     '''
-    tau_directory_path = tau_formatted_root_directory()
-    file_path = os.path.join(tau_directory_path, file_name)
     file = ROOT.TFile(file_path)
     return file
 
@@ -508,7 +506,7 @@ def recreate_formatted_root_file(file_name):
     file = ROOT.TFile(file_path, 'recreate')
     return file
 
-def get_formatted_root_tree(file_name, tree_name = 'mytree'):
+def get_formatted_root_tree(file_path, tree_name = 'mytree'):
     '''
     Return ROOT TTree object in file file_name with name tree_name. Calls get_root_file which looks in predetermined
         folder. This must return the TFile object as well or else the file is closed on function return and the tree
@@ -518,7 +516,7 @@ def get_formatted_root_tree(file_name, tree_name = 'mytree'):
     :param tree_name: Name of tree to find and return, defaults to 'mytree'
     :return: ROOT TTree object and ROOT TFile object in given file with given name
     '''
-    file = open_formatted_root_file(file_name)
+    file = open_formatted_root_file(file_path)
     tree = ROOTClassDefs.Tree(file.Get(tree_name))
     return tree, file
 
@@ -579,3 +577,16 @@ def get_reco_stats(tree1, tree2):
     stdev_et = stats.stdev(et_list)
 
     return max_et, min_et, avg_et, stdev_et
+
+def multi_print(file_list, canvas, file_ending=''):
+    '''
+    Print to all files in the given list of files
+
+    :param file_list: List of file paths to print to
+    :param canvas: ROOT TCanvas object where plots are drawn
+    :param file_ending: String to be added to the end of each file name, intended to be used with ( or ) in ROOT with the first or last plot
+    '''
+    file_list = [file_name+file_ending for file_name in file_list]
+
+    for file_name in file_list:
+        canvas.Print(file_name)
