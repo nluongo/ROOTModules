@@ -63,11 +63,17 @@ class Event:
         self.total_et = self.l0_layer.total_et + self.l1_layer.total_et + self.l2_layer.total_et\
                             + self.l3_layer.total_et + self.had_layer.total_et
 
-        # Determine if the event is oriented in such a way that more of the energy is concentrated in a particular
-        #   off-phi direction i.e. towards phi=0, set phi_oriented flag accordingly. Commented out and moved under
-        #   find_l2_seed because seed information is necessary for calculating\
+        # If seed information is present in Tree use that, otherwise search within pre-defined region to find the seed
         self.seed_region = tree.seed_region_def
-        self.seed_eta, self.seed_phi = ROOTDefs.find_et_seed(l2_layer, self.seed_region)
+        if hasattr(tree, 'seedEta') and hasattr(tree, 'seedPhi'):
+            self.seed_eta = tree.seedEta
+            self.seed_phi = tree.seedPhi
+            if self.seed_eta not in range(self.seed_region[0][0], self.seed_region[0][1]+1):  
+                raise ValueError('Pre-determined seed eta not within seed region. Seed eta: ',str(self.seed_eta),' Eta seed region: ',str(self.seed_region[0]))
+            if self.seed_phi not in range(self.seed_region[1][0], self.seed_region[1][1]+1):
+                raise ValueError('Pre-determined seed phi not within seed region. Seed phi: ',str(self.seed_phi),' Phi seed region: ',str(self.seed_region[1]))
+        else:
+            self.seed_eta, self.seed_phi = ROOTDefs.find_et_seed(l2_layer, self.seed_region) 
         self.seed_et = l2_layer.cell_et[self.seed_eta][self.seed_phi]
 
         # Determine if the event needs to be phi-oriented, which is determined by the sum of adjacent cells for L1 + L2
@@ -126,6 +132,10 @@ class Event:
             #self.l1l2_combined_layer = Layer(self.l1_layer.cell_et + self.l2_layer.cell_et, self.l1_layer.eta_dim, self.l1_layer.phi_dim)
             self.fcore = calculate_fcore(self.l2_layer, self.fcore_def[0], self.fcore_def[1])
 
+        if hasattr(tree, 'tobEta'):
+            self.tobEta = tree.tobEta
+        if hasattr(tree, 'tobPhi'):
+            self.tobPhi = tree.tobPhi
 
     # Load truth attributes from tree if they were not loaded when the event was created
     def load_truth(self):
@@ -238,6 +248,9 @@ class Tree:
             self.iter_n += 1
             return event
 
+    def next(self):
+        return self.__next__()
+
     # Modify the reconstructed Et definition for the Tree
     def set_reco_et_def(self, new_reco_et_def):
         self.reco_et_def = new_reco_et_def
@@ -286,6 +299,16 @@ class Tree:
             self.true_tau_pt = self.root_ttree.mc_visibleTau.Pt()
         if hasattr(self.root_ttree, 'true_tau_pt'):
             self.true_tau_pt = self.root_ttree.true_tau_pt
+        if hasattr(self.root_ttree, 'TrueTauPt'):
+            self.true_tau_pt = self.root_ttree.TrueTauPt
+        if hasattr(self.root_ttree, 'TOBEta'):
+            self.tobEta = self.root_ttree.TOBEta
+        if hasattr(self.root_ttree, 'TOBPhi'):
+            self.tobPhi = self.root_ttree.TOBPhi
+        if hasattr(self.root_ttree, 'SeedEta'):
+            self.seedEta = self.root_ttree.SeedEta
+        if hasattr(self.root_ttree, 'SeedPhi'):
+            self.seedPhi = self.root_ttree.SeedPhi
         if hasattr(self.root_ttree, 'true_tau_charged'):
             self.true_tau_charged = self.root_ttree.true_tau_charged
         if hasattr(self.root_ttree, 'true_tau_neutral'):
