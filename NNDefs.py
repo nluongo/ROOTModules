@@ -1,7 +1,7 @@
 import os
 import numpy as np
 import pandas as pd
-from tensorflow import keras, set_random_seed
+from tensorflow import keras
 
 
 def build_and_train_network(train_ets, train_sig_back, test_ets, test_sig_back, is_class_nn=True, lr=0.1, epochs=10, use_bias=True,
@@ -32,7 +32,7 @@ def build_network(is_class_nn, input_nodes, hidden_layers, hidden_nodes, use_bia
         end_activation = 'sigmoid'
     else:
         end_activation = None
-
+    '''
     # Create dictionary of different keras models parametrized by the number of hidden layers
     models = {}
 
@@ -52,8 +52,21 @@ def build_network(is_class_nn, input_nodes, hidden_layers, hidden_nodes, use_bia
        keras.layers.Dense(hidden_nodes, activation='relu'),
        keras.layers.Dense(1, activation=end_activation)
     ])
+    '''
 
-    return models[hidden_layers]
+    if hidden_layers == 0:
+        model = keras.Sequential([
+            keras.layers.Dense(1, input_shape=(input_nodes,), activation=end_activation, use_bias=use_bias),
+        ])
+    else:
+        model = keras.Sequential()
+        model.add(keras.layers.Dense(hidden_nodes, input_shape=(input_nodes,), activation='relu'))
+        for i in range(hidden_layers - 1):
+            model.add(keras.layers.Dense(hidden_nodes, activation='relu'))
+        model.add(keras.layers.Dense(1, activation=end_activation))
+
+    return model
+    #return models[hidden_layers]
 
 def get_layer_weights_from_txt(config_num):
     '''
