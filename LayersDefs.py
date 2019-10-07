@@ -1,6 +1,6 @@
 import ROOT
 from ROOT import TGraph
-from ROOTDefs import tau_formatted_root_directory
+from ROOTDefs import tau_data_directory, tau_signal_layer_file, tau_background_layer_file
 from NNDefs import build_and_train_network
 import os
 import numpy as np
@@ -9,28 +9,27 @@ import math
 from sklearn.model_selection import train_test_split
 import uproot
 
-def get_signal_and_background_frames():
+def get_signal_and_background_frames(sig_file_path=None, back_file_path=None):
     '''
-    Get standard tau analysis signal and background files from predetermined directories and load them into Pandas
-        dataframes. Also populate new IsSignal column for both.
-
+    Get standard tau analysis signal and background files from predetermined directories and load them into Pandas dataframes. Also populate new IsSignal column for both. If no paths provided for the files then system environment variables are checked.
+    :param sig_file_path: Path to the signal layer file
+    :param back_file_path: Path to the background layer file
     :return signal_frame: Pandas dataframe holding layer Ets for signal events plus new IsSignal column set to 1
     :return background_frame: Pandas dataframe holding layer Ets for background events plus new IsSignal column set to 0
     '''
-    sig_file_path = os.path.join(tau_formatted_root_directory(), os.environ['tauSigLayerFile'])
+    if sig_file_path is None:
+        sig_file_path = os.path.join(tau_data_directory(), tau_signal_layer_file())
+    if back_file_path is None:
+        back_file_path = os.path.join(tau_data_directory(), tau_background_layer_file())
+    
     fsig = uproot.open(sig_file_path)
-
     tsig = fsig['mytree']
-    signal_frame = tsig.arrays(['L0Et', 'L1Et', 'L2Et', 'L3Et', 'HadEt', 'TruePt'], outputtype=pd.DataFrame)
-
+    signal_frame = tsig.arrays(['L0Et', 'L1Et', 'L2Et', 'L3Et', 'HadEt'], outputtype=pd.DataFrame)
     signal_frame['IsSignal'] = 1
 
-    back_file_path = os.path.join(tau_formatted_root_directory(), os.environ['tauBackLayerFile'])
     fback = uproot.open(back_file_path)
-
     tback = fback['mytree']
     background_frame = tback.arrays(['L0Et', 'L1Et', 'L2Et', 'L3Et', 'HadEt'], outputtype=pd.DataFrame)
-
     background_frame['IsSignal'] = 0
 
     return signal_frame, background_frame
