@@ -477,12 +477,35 @@ def apply_tree_cut(old_tree, cut_string, temp_file):
     # Load new TTree into custom Tree and return
     return ROOTClassDefs.Tree(new_tree)
 
-def tau_formatted_root_directory():
+def tau_data_directory():
     '''
     :return: Predetermined directory holding formatted ROOT files for the TauTrigger project
     '''
-    directory_path = os.environ['tauDirectory']
+    if os.environ['tauDirectory'] is None:
+        raise Exception('No tauDirectory environment variable defined')
+    else:
+        directory_path = os.environ['tauDirectory']
     return directory_path
+
+def tau_signal_layer_file():
+    '''
+    :return: Predetermined name for signal layer file for the TauTrigger project
+    '''
+    if os.environ['tauSigLayerFile'] is None:
+        raise Exception('No tauSigLayerFile environment variable defined')
+    else:
+        file_name = os.environ['tauSigLayerFile']
+    return file_name
+
+def tau_background_layer_file():
+    '''
+    :return: Predetermined name for background layer file for the TauTrigger project
+    '''
+    if os.environ['tauBackLayerFile'] is None:
+        raise Exception('No tauBackLayerFile environment variable defined')
+    else:
+        file_name = os.environ['tauBackLayerFile']
+    return file_name
 
 def open_formatted_root_file(file_path):
     '''
