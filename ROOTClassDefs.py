@@ -219,10 +219,10 @@ class Tree:
     def __init__(self, ttree):
         self.root_ttree = ttree
         self.entries = self.root_ttree.GetEntries()
-        self.layer_dim_keys = {0 : [3, 3], 1 : [13, 3], 2 : [13, 3], 3 : [3, 3], 4 : [3, 3]}
+        self.layer_dim_keys = {0 : [3, 3], 1 : [12, 3], 2 : [12, 3], 3 : [3, 3], 4 : [3, 3]}
         self.reco_et_def = [[1, 2], [5, 2], [5, 2], [3, 2], [3, 2]]
-        self.seed_region_def = [[4, 8], [1, 1]]
-        self.adjacent_eta_cells = { 4: -1, 5: 0, 6: 0, 7: 0, 8: 1 }
+        self.seed_region_def = [[4, 7], [1, 1]]
+        self.adjacent_eta_cells = { 4: -1, 5: 0, 6: 0, 7: 1 }
         self.fcore_def = [[3, 2], [13, 3]]
         self.reco_et_layer_weights = [1, 1, 1, 1, 1]
         self.reco_et_shift = 0
