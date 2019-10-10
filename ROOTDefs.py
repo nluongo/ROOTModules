@@ -6,10 +6,12 @@ import os
 #import statistics as stats
 import math
 from math import exp
+from sys import exit
 
 def set_po_tree_parameters(tree):
     '''
-    Sets standard parameters for custom Tree instance for PO files
+    DEPRECATED: These setting are now the default in the custom Tree class
+    Sets standard parameters for custom Tree instance for PO (Pier-Olivier) files
 
     :param tree: Custom Tree instance
     :return: Custom Tree instance with parameters set
@@ -23,6 +25,26 @@ def set_po_tree_parameters(tree):
     # Set the method for choosing adjacent cells in certain layers
     new_adj_dict = {4: -1, 5: 0, 6: 0, 7: 1}
     tree.set_adjacent_eta_cells(new_adj_dict)
+
+def set_et_tree_parameters(tree):
+    '''
+    Set standard parameters for custom Tree instances for ET (Eric Torrence) files
+
+    :param tree: Custom Tree instance
+    :return: Custom Tree instances with parameters set
+    '''
+
+    # Set dimensions of layers
+    tree.set_layer_dim(1, 13, 3)
+    tree.set_layer_dim(2, 13, 3)
+    # Set region from which to select the seed cell
+    tree.set_seed_region(4, 8, 1, 1)
+    # Set the method for choosing adjacent cells in certain layers
+    new_adj_dict = {4: -1, 5: 0, 6: 0, 7: 0, 8: 1}
+    tree.set_adjacent_eta_cells(new_adj_dict)
+    # Set FCore definition
+    new_fcore_def = [[3, 2], [13, 3]]
+    self.set_fcore_def(new_fcore_def)
 
 def resize_root_layer_to_array(layer_et, eta_dim, phi_dim):
     '''
@@ -103,8 +125,7 @@ def calc_reco_et(event):
 
 def prepare_event(tree, i, mctau=0, reco_et=1, fcore=0):
     '''
-    Create and prepare custom Event class instance. Loads event information into custom Tree, builds Event, then phi
-        orients
+    Create and prepare custom Event class instance. Loads event information into custom Tree, builds Event, then phi orients
 
     :param tree: Custom Tree class instance
     :param i: Event number to load
@@ -197,6 +218,9 @@ def layer_reco_et(layer, eta_cells, phi_cells, seed_eta = -1, seed_phi = -1, adj
     :param layer: Custom Layer class instance whose Et is being calculated
     :param eta_cells: Number of cells in the eta direction in the reconstructed Et definition
     :param phi_cells: Number of cells in the phi direction in the reconstructed Et definition
+    :param seed_eta: Eta index of the seed cell
+    :param seed_phi: Phi index of the seed cell
+    :adjacent_eta_def: Dictionary holding the offset in eta to be applied depending on the eta index of the seed cell
 
     :return: The Et of the layer according to the given reconstructed Et definition
     '''
@@ -218,7 +242,7 @@ def layer_reco_et(layer, eta_cells, phi_cells, seed_eta = -1, seed_phi = -1, adj
             eta_min = eta_min - 1
         elif adjacent_eta_def == 1:
             eta_max = eta_max + 1
-
+    
     total_et = 0
     for i in range(eta_min, eta_max + 1):
         for j in range(phi_min, phi_max + 1):
@@ -334,7 +358,7 @@ def phi_flip_layer(layer):
             cell_et_holder[i][j] = layer.cell_et[i][phi_len - 1 - j]
     layer.cell_et = cell_et_holder
 
-def calculate_fcore(layer, fcore_core_def, fcore_isolation_def):
+def calculate_fcore(layer, fcore_core_def, fcore_isolation_def, seed_eta = -1, seed_phi = -1):
     '''
     Calculate FCore value for a given event and FCore definition
 
@@ -346,8 +370,8 @@ def calculate_fcore(layer, fcore_core_def, fcore_isolation_def):
     '''
     #Create single custom Layer class instance whose Et for each cell is the sum of the Et of corresponding cells in L1
     #   and L2 layers
-    core_et = layer_reco_et(layer, fcore_core_def[0], fcore_core_def[1])
-    isolation_et = layer_reco_et(layer, fcore_isolation_def[0], fcore_isolation_def[1])
+    core_et = layer_reco_et(layer, fcore_core_def[0], fcore_core_def[1], seed_eta, seed_phi)
+    isolation_et = layer_reco_et(layer, fcore_isolation_def[0], fcore_isolation_def[1], seed_eta, seed_phi)
     return (core_et / isolation_et)
 
 def find_histo_percent_bin(histo, percent):
@@ -481,17 +505,37 @@ def tau_data_directory():
     '''
     :return: Predetermined directory holding formatted ROOT files for the TauTrigger project
     '''
-    if os.environ['tauDirectory'] is None:
+    if 'tauDirectory' not in os.environ:
         raise Exception('No tauDirectory environment variable defined')
     else:
         directory_path = os.environ['tauDirectory']
     return directory_path
 
+def tau_signal_cell_file():
+    '''
+    :return: Predetermined name for signal cell file for the TauTrigger project
+    '''
+    if 'tauSigCellFile' not in os.environ:
+        raise Exception('No tauSigCellFile environment variable defined')
+    else:
+        file_name = os.environ['tauSigCellFile']
+    return file_name
+
+def tau_background_cell_file():
+    '''
+    :return: Predetermined name for signal cell file for the TauTrigger project
+    '''
+    if 'tauBackCellFile' not in os.environ:
+        raise Exception('No tauBackCellFile environment variable defined')
+    else:
+        file_name = os.environ['tauBackCellFile']
+    return file_name
+
 def tau_signal_layer_file():
     '''
     :return: Predetermined name for signal layer file for the TauTrigger project
     '''
-    if os.environ['tauSigLayerFile'] is None:
+    if 'tauSigLayerFile' not in os.environ:
         raise Exception('No tauSigLayerFile environment variable defined')
     else:
         file_name = os.environ['tauSigLayerFile']
@@ -501,7 +545,7 @@ def tau_background_layer_file():
     '''
     :return: Predetermined name for background layer file for the TauTrigger project
     '''
-    if os.environ['tauBackLayerFile'] is None:
+    if 'tauBackLayerFile' not in os.environ:
         raise Exception('No tauBackLayerFile environment variable defined')
     else:
         file_name = os.environ['tauBackLayerFile']
@@ -543,7 +587,7 @@ def get_formatted_root_tree(file_path, tree_name = 'mytree'):
     tree = ROOTClassDefs.Tree(file.Get(tree_name))
     return tree, file
 
-def get_po_signal_et_background_files():
+def get_signal_and_background_files(sig_file_path=None, back_file_path=None):
     '''
     Retrieve custom Tree instances and TFiles with the standard setup being used for pretty much all tau trigger research. The signal
         sample is the PO and the background is the ET one. The signal file is also set up the default way for PO files
@@ -551,10 +595,14 @@ def get_po_signal_et_background_files():
 
     :return: Signal custom Tree instance, signal TFile, background customer Tree instance, and background TFile
     '''
-    tsig, fsig = get_formatted_root_tree('ztt_Output_formatted.root')
-    set_po_tree_parameters(tsig)
+    if sig_file_path is None:
+        sig_file_path = os.path.join(tau_data_directory(), tau_signal_cell_file())
+    if back_file_path is None:
+        back_file_path = os.path.join(tau_data_directory(), tau_background_cell_file())
 
-    tback, fback = get_formatted_root_tree('output_MB80_formatted.root')
+    tsig, fsig = get_formatted_root_tree(sig_file_path)
+
+    tback, fback = get_formatted_root_tree(back_file_path)
 
     return tsig, fsig, tback, fback
 
