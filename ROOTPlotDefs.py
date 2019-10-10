@@ -96,9 +96,7 @@ def fcore_tree_histogram(tree):
     '''
     tree_entries = tree.entries
     histo = TH1F("histo", "FCore", 100, 0, 1)
-    for i in range(tree_entries):
-        tree.get_entry(i)
-        event = build_event_instance(tree, 0, 0, 1)
+    for event in tree(0, 1, 1):
         histo.Fill(event.fcore)
     histo.GetXaxis().SetTitle("FCore")
     histo.GetYaxis().SetTitle("Entries")
