@@ -188,10 +188,10 @@ def background_eff_at_target_signal_eff(signal_frame, background_frame, cut_colu
     sorted_signal_et = signal_frame[[cut_column]].sort_values(by=[cut_column])
 
     # Find the cutoff Et that produces the 90% remaining signal efficiency
-    et_cutoff = sorted_signal_et.iloc[sig_events_to_cut - 1][cut_column]
+    cutoff = sorted_signal_et.iloc[sig_events_to_cut - 1][cut_column]
 
     # Find the number of background events that survive the previously calculated Et cut
-    background_above_cutoff_each = [1 if et > et_cutoff else 0 for et in background_frame[cut_column]]
+    background_above_cutoff_each = [1 if value > cutoff else 0 for value in background_frame[cut_column]]
     background_above_cutoff = sum(background_above_cutoff_each)
 
     # Convert event number to efficiency
