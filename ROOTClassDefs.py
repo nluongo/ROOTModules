@@ -1,6 +1,6 @@
 import ROOT
 import ROOTDefs
-#from ROOTDefs import find_et_seed
+#from ROOTDefs import calculate_fcore
 
 class Layer:
     '''
@@ -128,9 +128,7 @@ class Event:
 
         # If fcore flag was passed then calculate fcore using default definition
         if fcore_yn == 1:
-            # Define FCore value of the event based on definition: core = 5x2, isolation = 13x3
-            #self.l1l2_combined_layer = Layer(self.l1_layer.cell_et + self.l2_layer.cell_et, self.l1_layer.eta_dim, self.l1_layer.phi_dim)
-            self.fcore = calculate_fcore(self.l2_layer, self.fcore_def[0], self.fcore_def[1])
+            self.fcore = ROOTDefs.calculate_fcore(self.l2_layer, self.fcore_def[0], self.fcore_def[1], self.seed_eta, self.seed_phi)
 
         if hasattr(tree, 'tobEta'):
             self.tobEta = tree.tobEta
@@ -167,7 +165,7 @@ class Event:
 
     def set_fcore_def(self, new_fcore_def):
         self.fcore_def = new_fcore_def
-        self.fcore = calculate_fcore(self.l2_layer, self.fcore_def[0], self.fcore_def[1])
+        self.fcore = ROOTDefs.calculate_fcore(self.l2_layer, self.fcore_def[0], self.fcore_def[1], self.seed_eta, self.seed_phi)
 
     # Modify the values of layer weights used to calculate reconstructed Et
     def set_reco_et_layer_weights(self, new_layer_weights):
@@ -198,8 +196,7 @@ class Event:
 
             # Recalculate FCore
             if self.fcore_yn == 1:
-                self.l1l2_combined_layer = Layer(self.l1_layer.cell_et + self.l2_layer.cell_et, self.l1_layer.eta_dim, self.l1_layer.phi_dim)
-                self.fcore = calculate_fcore(self.l1l2_combined_layer, self.fcore_def[0], self.fcore_def[1])
+                self.fcore = ROOTDefs.calculate_fcore(self.l2_layer, self.fcore_def[0], self.fcore_def[1], self.seed_eta, self.seed_phi)
 
             # Set flag indicating the event is now phi oriented
             self.phi_oriented = 1
@@ -223,7 +220,7 @@ class Tree:
         self.reco_et_def = [[1, 2], [5, 2], [5, 2], [3, 2], [3, 2]]
         self.seed_region_def = [[4, 7], [1, 1]]
         self.adjacent_eta_cells = { 4: -1, 5: 0, 6: 0, 7: 1 }
-        self.fcore_def = [[3, 2], [13, 3]]
+        self.fcore_def = [[3, 2], [12, 3]]
         self.reco_et_layer_weights = [1, 1, 1, 1, 1]
         self.reco_et_shift = 0
         self.iter_mctau = 0
