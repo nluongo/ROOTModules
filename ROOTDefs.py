@@ -44,7 +44,7 @@ def set_et_tree_parameters(tree):
     tree.set_adjacent_eta_cells(new_adj_dict)
     # Set FCore definition
     new_fcore_def = [[3, 2], [13, 3]]
-    self.set_fcore_def(new_fcore_def)
+    tree.set_fcore_def(new_fcore_def)
 
 def resize_root_layer_to_array(layer_et, eta_dim, phi_dim):
     '''
