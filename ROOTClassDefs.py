@@ -177,6 +177,19 @@ class Event:
         self.reco_et_shift = new_shift_et
         self.reco_et = calc_reco_et(self)
 
+    # Set new seed eta and phi positions
+    def set_seed_position(self, new_seed_eta, new_seed_phi):
+        self.seed_eta = new_seed_eta
+        self.seed_phi = new_seed_phi
+
+        # Recalculate reconstruct Et
+        if self.reco_et_yn == 1:
+            self.reco_et = ROOTDefs.calc_reco_et(self)
+
+        # Recalculate FCore
+        if self.fcore_yn == 1:
+            self.fcore = ROOTDefs.calculate_fcore(self.l2_layer, self.fcore_def[0], self.fcore_def[1], self.seed_eta, self.seed_phi) 
+
     # If the off-phi is not concentrated in the 0 phi direction, then flip all layer so that it is and then recalculate
     #   all values that are orientation sensitive
     def phi_orient(self):
@@ -213,9 +226,10 @@ class Tree:
 
     :param tree: A TTree object
     '''
-    def __init__(self, ttree):
-        self.root_ttree = ttree
-        self.entries = self.root_ttree.GetEntries()
+    def __init__(self, ttree=None):
+        if ttree is not None:
+            self.root_ttree = ttree
+            self.entries = self.root_ttree.GetEntries()
         self.layer_dim_keys = {0 : [3, 3], 1 : [12, 3], 2 : [12, 3], 3 : [3, 3], 4 : [3, 3]}
         self.reco_et_def = [[1, 2], [5, 2], [5, 2], [3, 2], [3, 2]]
         self.seed_region_def = [[4, 7], [1, 1]]
