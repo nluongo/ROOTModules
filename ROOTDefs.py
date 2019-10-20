@@ -46,6 +46,24 @@ def set_et_tree_parameters(tree):
     new_fcore_def = [[3, 2], [13, 3]]
     tree.set_fcore_def(new_fcore_def)
 
+def phi_flip_bounds(phi_min, phi_max):
+    '''
+    Flip the phi orientation of the range defined by the given minimum and maximum phi values. Assume that phi_max is at the central position of the layer.
+
+    :param phi_min: Minimum phi value included in the range
+    :param phi_max: Maximum phi value included in the range
+
+    :return new_phi_min: Minimum phi value after shift
+    :return new_phi_max: Maximum phi value after shift
+    '''
+    # Get the number of cells to shift in phi, so if range is [0, 1] must shift up one to get [1,2]
+    phi_shift = phi_max - phi_min
+    # Shift max and min values
+    new_phi_min = phi_min + phi_shift
+    new_phi_max = phi_max + phi_shift
+    
+    return new_phi_min, new_phi_max
+
 def resize_root_layer_to_array(layer_et, eta_dim, phi_dim):
     '''
     Takes in the one-dimensional Et layer object as returned by ROOT GetEntry() and reformats it into a two-dimensional
@@ -137,12 +155,10 @@ def prepare_event(tree, i, mctau=0, reco_et=1, fcore=0):
 
     tree.get_entry(i)
     event = build_event_instance(tree, mctau, reco_et, fcore)
-    event.phi_orient()
 
     return event
 
-def event_reco_et(event, l0_reco_eta, l0_reco_phi, l1_reco_eta, l1_reco_phi, l2_reco_eta, l2_reco_phi, l3_reco_eta,
-                  l3_reco_phi, had_reco_eta, had_reco_phi, layer_weights=[1,1,1,1,1], shift_et = 0):
+def event_reco_et(event, l0_reco_eta, l0_reco_phi, l1_reco_eta, l1_reco_phi, l2_reco_eta, l2_reco_phi, l3_reco_eta, l3_reco_phi, had_reco_eta, had_reco_phi, layer_weights=[1,1,1,1,1], shift_et = 0):
     '''
     Calculate the Et of an event according to the reconstructed Et definition defined by the given eta and phi
         values for each layer.
@@ -167,37 +183,32 @@ def event_reco_et(event, l0_reco_eta, l0_reco_phi, l1_reco_eta, l1_reco_phi, l2_
     :return: The Et of the event according to the given reconstructed Et definition
     '''
 
-    #Check here if reconstucted Et definition is valied
-    if (is_layer_reco_def_valid(event.l0_layer.eta_dim, event.l0_layer.phi_dim, event.l0_layer.key, l0_reco_eta,
-                                l0_reco_phi) == 0 or
-        is_layer_reco_def_valid(event.l1_layer.eta_dim, event.l1_layer.phi_dim, event.l1_layer.key, l1_reco_eta,
-                                l1_reco_phi) == 0 or
-        is_layer_reco_def_valid(event.l2_layer.eta_dim, event.l1_layer.phi_dim, event.l1_layer.key, l2_reco_eta,
-                                l2_reco_phi) == 0 or
-        is_layer_reco_def_valid(event.l3_layer.eta_dim, event.l2_layer.phi_dim, event.l2_layer.key, l3_reco_eta,
-                                l3_reco_phi) == 0 or
-        is_layer_reco_def_valid(event.had_layer.eta_dim, event.had_layer.phi_dim, event.had_layer.key, had_reco_eta,
-                                had_reco_phi) == 0):
+    #Check here if reconstructed Et definition is valied
+    if (is_layer_reco_def_valid(event.l0_layer.eta_dim, event.l0_layer.phi_dim, event.l0_layer.key, l0_reco_eta, l0_reco_phi) == 0 or
+        is_layer_reco_def_valid(event.l1_layer.eta_dim, event.l1_layer.phi_dim, event.l1_layer.key, l1_reco_eta, l1_reco_phi) == 0 or
+        is_layer_reco_def_valid(event.l2_layer.eta_dim, event.l1_layer.phi_dim, event.l1_layer.key, l2_reco_eta, l2_reco_phi) == 0 or
+        is_layer_reco_def_valid(event.l3_layer.eta_dim, event.l2_layer.phi_dim, event.l2_layer.key, l3_reco_eta, l3_reco_phi) == 0 or
+        is_layer_reco_def_valid(event.had_layer.eta_dim, event.had_layer.phi_dim, event.had_layer.key, had_reco_eta, had_reco_phi) == 0):
         print("Invalid reconstructed Et definition")
         quit
 
-    l0_reco_et = layer_reco_et(event.l0_layer, l0_reco_eta, l0_reco_phi, -1, -1, event.adjacent_eta_direction)
+    l0_reco_et = layer_reco_et(event.l0_layer, l0_reco_eta, l0_reco_phi, -1, -1, event.adjacent_eta_direction, event.phi_oriented)
     event.l0_layer.reco_et = l0_reco_et
     event.l0_layer.reco_et_weighted = l0_reco_et * layer_weights[0]
 
-    l1_reco_et = layer_reco_et(event.l1_layer, l1_reco_eta, l1_reco_phi, event.seed_eta, event.seed_phi)
+    l1_reco_et = layer_reco_et(event.l1_layer, l1_reco_eta, l1_reco_phi, event.seed_eta, event.seed_phi, event.adjacent_eta_direction, event.phi_oriented)
     event.l1_layer.reco_et = l1_reco_et
     event.l1_layer.reco_et_weighted = l1_reco_et * layer_weights[1]
 
-    l2_reco_et = layer_reco_et(event.l2_layer, l2_reco_eta, l2_reco_phi, event.seed_eta, event.seed_phi)
+    l2_reco_et = layer_reco_et(event.l2_layer, l2_reco_eta, l2_reco_phi, event.seed_eta, event.seed_phi, event.adjacent_eta_direction, event.phi_oriented)
     event.l2_layer.reco_et = l2_reco_et
     event.l2_layer.reco_et_weighted = l2_reco_et * layer_weights[2]
 
-    l3_reco_et = layer_reco_et(event.l3_layer, l3_reco_eta, l3_reco_phi, -1, -1, event.adjacent_eta_direction)
+    l3_reco_et = layer_reco_et(event.l3_layer, l3_reco_eta, l3_reco_phi, -1, -1, event.adjacent_eta_direction, event.phi_oriented)
     event.l3_layer.reco_et = l3_reco_et
     event.l3_layer.reco_et_weighted = l3_reco_et * layer_weights[3]
 
-    had_reco_et = layer_reco_et(event.had_layer, had_reco_eta, had_reco_phi, -1, -1, event.adjacent_eta_direction)
+    had_reco_et = layer_reco_et(event.had_layer, had_reco_eta, had_reco_phi, -1, -1, event.adjacent_eta_direction, event.phi_oriented)
     event.had_layer.reco_et = had_reco_et
     event.had_layer.reco_et_weighted = had_reco_et * layer_weights[4]
 
@@ -210,7 +221,7 @@ def event_reco_et(event, l0_reco_eta, l0_reco_phi, l1_reco_eta, l1_reco_phi, l2_
 
     return total_reco_et
 
-def layer_reco_et(layer, eta_cells, phi_cells, seed_eta = -1, seed_phi = -1, adjacent_eta_def = 0):
+def layer_reco_et(layer, eta_cells, phi_cells, seed_eta = -1, seed_phi = -1, adjacent_eta_def = 0, phi_oriented = 1):
     '''
     Calculate the Et of a layer according to the given reconstructed Et definition for the layer by summing the Et
         of all referenced cells
@@ -220,7 +231,8 @@ def layer_reco_et(layer, eta_cells, phi_cells, seed_eta = -1, seed_phi = -1, adj
     :param phi_cells: Number of cells in the phi direction in the reconstructed Et definition
     :param seed_eta: Eta index of the seed cell
     :param seed_phi: Phi index of the seed cell
-    :adjacent_eta_def: Dictionary holding the offset in eta to be applied depending on the eta index of the seed cell
+    :param adjacent_eta_def: Dictionary holding the offset in eta to be applied depending on the eta index of the seed cell
+    :param phi_oriented: Binary value holding 1 if Et is already oriented in the correct 0-phi direction and 0 if it is not and therefore must be flipped
 
     :return: The Et of the layer according to the given reconstructed Et definition
     '''
@@ -235,8 +247,11 @@ def layer_reco_et(layer, eta_cells, phi_cells, seed_eta = -1, seed_phi = -1, adj
     eta_min, eta_max = get_eta_range(layer.eta_dim, eta_cells, seed_eta)
     phi_min, phi_max = get_phi_range(layer.phi_dim, phi_cells)
 
-    # If the seed is close to the edge of a coarse cell and we are only using a single eta cell in that layer,
-    #   then include an adjacent cell in the eta direction for coarse layers
+    # If necessary, flip phi bounds
+    if phi_oriented == 0:
+        phi_min, phi_max = phi_flip_bounds(phi_min, phi_max)
+
+    # If the seed is close to the edge of a coarse cell and we are only using a single eta cell in that layer, then include an adjacent cell in the eta direction for coarse layers
     if eta_cells == 1:
         if adjacent_eta_def == -1:
             eta_min = eta_min - 1
@@ -315,9 +330,7 @@ def get_eta_range(layer_eta, range_length, seed_eta = -1):
 
 def get_phi_range(layer_phi, range_length):
     '''
-    Returns a range of phi whose central value is the center value of layer_phi and containing range_length
-        total cells, unless range_length = 2, in which case the range includes only the center and off-center to one
-        side
+    Returns a range of phi whose central value is the center value of layer_phi and containing range_length total cells, unless range_length = 2, in which case the range includes only the center and off-center to one side
 
     Examples:   get_cell_range(3, 3) = 0, 2
                 get_cell_range(3, 2) = 0, 1
