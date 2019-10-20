@@ -190,29 +190,29 @@ class Event:
         if self.fcore_yn == 1:
             self.fcore = ROOTDefs.calculate_fcore(self.l2_layer, self.fcore_def[0], self.fcore_def[1], self.seed_eta, self.seed_phi) 
 
-    # If the off-phi is not concentrated in the 0 phi direction, then flip all layer so that it is and then recalculate
-    #   all values that are orientation sensitive
-    def phi_orient(self):
-        if self.phi_oriented == 1:
-            pass
-        else:
-            # Flip each layer
-            ROOTDefs.phi_flip_layer(self.l0_layer)
-            ROOTDefs.phi_flip_layer(self.l1_layer)
-            ROOTDefs.phi_flip_layer(self.l2_layer)
-            ROOTDefs.phi_flip_layer(self.l3_layer)
-            ROOTDefs.phi_flip_layer(self.had_layer)
+    # DEPRECATED - Phi flipping now handled in layer_reco_et so that layer cells can be maintained as they actually are. Commented out but keeping for reference
+    # If the off-phi is not concentrated in the 0 phi direction, then flip all layer so that it is and then recalculate all values that are orientation sensitive
+    #def phi_orient(self):
+    #    if self.phi_oriented == 1:
+    #        pass
+    #    else:
+    #        # Flip each layer
+    #        ROOTDefs.phi_flip_layer(self.l0_layer)
+    #        ROOTDefs.phi_flip_layer(self.l1_layer)
+    #        ROOTDefs.phi_flip_layer(self.l2_layer)
+    #        ROOTDefs.phi_flip_layer(self.l3_layer)
+    #        ROOTDefs.phi_flip_layer(self.had_layer)
 
-            # Recalculate reconstructed Et
-            if self.reco_et_yn == 1:
-                self.reco_et = ROOTDefs.calc_reco_et(self)
+    #        # Recalculate reconstructed Et
+    #        if self.reco_et_yn == 1:
+    #            self.reco_et = ROOTDefs.calc_reco_et(self)
 
-            # Recalculate FCore
-            if self.fcore_yn == 1:
-                self.fcore = ROOTDefs.calculate_fcore(self.l2_layer, self.fcore_def[0], self.fcore_def[1], self.seed_eta, self.seed_phi)
+    #        # Recalculate FCore
+    #        if self.fcore_yn == 1:
+    #            self.fcore = ROOTDefs.calculate_fcore(self.l2_layer, self.fcore_def[0], self.fcore_def[1], self.seed_eta, self.seed_phi)
 
-            # Set flag indicating the event is now phi oriented
-            self.phi_oriented = 1
+    #        # Set flag indicating the event is now phi oriented
+    #        self.phi_oriented = 1
 
     # Search the L2 layer in the given eta/phi range for the cell with greatest Et and set coordinates to variables
     def set_adjacent_eta(self, adjacent_eta_cells):
