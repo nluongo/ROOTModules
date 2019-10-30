@@ -181,6 +181,7 @@ class Event:
     def set_seed_position(self, new_seed_eta, new_seed_phi):
         self.seed_eta = new_seed_eta
         self.seed_phi = new_seed_phi
+        self.seed_et = self.l2_layer.cell_et[self.seed_eta][self.seed_phi]
 
         # Recalculate reconstruct Et
         if self.reco_et_yn == 1:
