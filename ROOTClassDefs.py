@@ -126,14 +126,23 @@ class Event:
             if hasattr(tree, 'true_tau_neutral'):
                 self.true_tau_neutral = tree.true_tau_neutral
 
-        # If fcore flag was passed then calculate fcore using default definition
-        if fcore_yn == 1:
-            self.fcore = ROOTDefs.calculate_fcore(self.l2_layer, self.fcore_def[0], self.fcore_def[1], self.seed_eta, self.seed_phi)
-
+        
+        if hasattr(tree, 'TrueTauPt'):
+            self.TrueTauPt = tree.TrueTauPt
+        if hasattr(tree, 'TrueTauEta'):
+            self.TrueTauEta = tree.TrueTauEta
+        if hasattr(tree, 'RecoTauPt'):
+            self.RecoTauPt = tree.RecoTauPt
+        if hasattr(tree, 'RecoTauEta'):
+            self.RecoTauEta = tree.RecoTauEta
         if hasattr(tree, 'tobEta'):
             self.tobEta = tree.tobEta
         if hasattr(tree, 'tobPhi'):
             self.tobPhi = tree.tobPhi
+
+        # If fcore flag was passed then calculate fcore using default definition
+        if fcore_yn == 1:
+            self.fcore = ROOTDefs.calculate_fcore(self.l2_layer, self.fcore_def[0], self.fcore_def[1], self.seed_eta, self.seed_phi)
 
     # Load truth attributes from tree if they were not loaded when the event was created
     def load_truth(self):
@@ -312,7 +321,13 @@ class Tree:
         if hasattr(self.root_ttree, 'true_tau_pt'):
             self.true_tau_pt = self.root_ttree.true_tau_pt
         if hasattr(self.root_ttree, 'TrueTauPt'):
-            self.true_tau_pt = self.root_ttree.TrueTauPt
+            self.TrueTauPt = self.root_ttree.TrueTauPt
+        if hasattr(self.root_ttree, 'TrueTauEta'):
+            self.TrueTauEta = self.root_ttree.TrueTauEta
+        if hasattr(self.root_ttree, 'RecoTauPt'):
+            self.RecoTauPt = self.root_ttree.RecoTauPt
+        if hasattr(self.root_ttree, 'RecoTauEta'):
+            self.RecoTauEta = self.root_ttree.RecoTauEta
         if hasattr(self.root_ttree, 'TOBEta'):
             self.tobEta = self.root_ttree.TOBEta
         if hasattr(self.root_ttree, 'TOBPhi'):
