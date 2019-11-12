@@ -164,11 +164,12 @@ def isCentralTowerSeed(event):
         return 1
 
 # Truth-match taus to TOBs
-def eventTruthMatchedTOBs(event):
+def eventTruthMatchedTOBs(event, tree=None):
     '''
     Return TOBs that have been matched to true taus. Only TOBs that pass Run-II seeding will be matched
 
     :param event: Event in ROOT TTree holding truth, reco, and TOB information
+    :param tree: Custom Tree class instance holding event settings
 
     :return: List of truth-matched TOBs, the first element of the list is the TOB and the second is the Pt of the true tau it has been matched to.
     '''
@@ -180,7 +181,12 @@ def eventTruthMatchedTOBs(event):
     for i in range(event.truth_SelectedTau_n):
         # Build truth vector
         trueVector = TVector3(0, 0, 0)
-        trueVector.SetPtEtaPhi(event.truth_SelectedTau_tlv_pt[i], event.truth_SelectedTau_tlv_eta[i], event.truth_SelectedTau_tlv_phi[i])
+        #trueVector.SetPtEtaPhi(event.truth_SelectedTau_tlv_pt[i], event.truth_SelectedTau_tlv_eta[i], event.truth_SelectedTau_tlv_phi[i])
+        trueVector.SetPtEtaPhi(event.truth_SelectedTau_ETVisible[i], event.truth_SelectedTau_EtaVisible[i], event.truth_SelectedTau_PhiVisible[i])
+
+        #print 'Truth Pt: ', event.truth_SelectedTau_tlv_pt[i]
+        #print 'Visible Truth Et: ',event.truth_SelectedTau_ETVisible[i]
+        #print trueVector.Pt()
 
         # Find reco tau with minimum dR from truth tau
         minTrueRecodR = float('inf')
@@ -190,7 +196,8 @@ def eventTruthMatchedTOBs(event):
         for j in range(event.reco_SelectedTau_n):
             # Build reco vector
             recoVector = TVector3(0, 0, 0)
-            recoVector.SetPtEtaPhi(event.reco_SelectedTau_tlv_pt[j], event.reco_SelectedTau_tlv_eta[j], event.reco_SelectedTau_tlv_phi[j])
+            #recoVector.SetPtEtaPhi(event.reco_SelectedTau_tlv_pt[j], event.reco_SelectedTau_tlv_eta[j], event.reco_SelectedTau_tlv_phi[j])
+            recoVector.SetPtEtaPhi(event.reco_SelectedTau_ETCalo[j], event.reco_SelectedTau_tlv_eta[j], event.reco_SelectedTau_tlv_phi[j])
             trueRecodR = trueVector.DeltaR(recoVector)
 
             if trueRecodR < minTrueRecodR:
@@ -199,7 +206,7 @@ def eventTruthMatchedTOBs(event):
                 closestRecoNum = j
 
         if minTrueRecodR > 0.3:
-            matchedTOBs.append([-1, event.truth_SelectedTau_tlv_pt[i], event.truth_SelectedTau_tlv_eta[i], -1, -1, i, -1, -1])
+            matchedTOBs.append([-1, trueVector.Pt(), trueVector.Eta(), -1, -1, i, -1, -1])
             continue
 
         # Find TOB with minimum dR from reconstructed tau
@@ -208,10 +215,14 @@ def eventTruthMatchedTOBs(event):
         closestTOB = None
         closestTOBNum = -1
         for k, tob in enumerate(event.efex_AllTOBs):
+
             # 3.99 to be consistent with Josefina's code
-            if not tob.ppmIsMaxCore(3.99):
+            #if not tob.ppmIsMaxCore(3.99):
+            #    continue
+            tob_event = event_from_tob(tree, tob)
+            if not isCentralTowerSeed(tob_event):
                 continue
-            
+
             tobVector = TVector3(0, 0, 0)
             tobVector.SetPtEtaPhi(tob.largeTauClus(), tob.eta(), tob.phi())
             recoTOBdR = closestReco.DeltaR(tobVector) 
@@ -221,12 +232,12 @@ def eventTruthMatchedTOBs(event):
                 closestTOB = tob
                 closestTOBNum = k
 
-        # If closest TOB is too far from reco then throw away true
+        # If closest TOB is too far from reco the load partial entry
         if minRecoTOBdR > 0.3:
-            matchedTOBs.append([-1, event.truth_SelectedTau_tlv_pt[i], event.truth_SelectedTau_tlv_eta[i], event.reco_SelectedTau_tlv_pt[closestRecoNum], event.reco_SelectedTau_tlv_eta[closestRecoNum], i, -1, -1])
+            matchedTOBs.append([-1, trueVector.Pt(), trueVector.Eta(), closestReco.Pt(), closestReco.Eta(), i, -1, -1])
             continue
 
-        matchedTOBs.append([closestTOB, event.truth_SelectedTau_tlv_pt[i], event.truth_SelectedTau_tlv_eta[i], event.reco_SelectedTau_tlv_pt[closestRecoNum], event.reco_SelectedTau_tlv_eta[closestRecoNum], i, closestRecoNum, closestTOBNum])
+        matchedTOBs.append([closestTOB, trueVector.Pt(), trueVector.Eta(), closestReco.Pt(), closestReco.Eta(), i, closestRecoNum, closestTOBNum])
       
     return matchedTOBs
 
