@@ -181,12 +181,7 @@ def eventTruthMatchedTOBs(event, tree=None):
     for i in range(event.truth_SelectedTau_n):
         # Build truth vector
         trueVector = TVector3(0, 0, 0)
-        #trueVector.SetPtEtaPhi(event.truth_SelectedTau_tlv_pt[i], event.truth_SelectedTau_tlv_eta[i], event.truth_SelectedTau_tlv_phi[i])
         trueVector.SetPtEtaPhi(event.truth_SelectedTau_ETVisible[i], event.truth_SelectedTau_EtaVisible[i], event.truth_SelectedTau_PhiVisible[i])
-
-        #print 'Truth Pt: ', event.truth_SelectedTau_tlv_pt[i]
-        #print 'Visible Truth Et: ',event.truth_SelectedTau_ETVisible[i]
-        #print trueVector.Pt()
 
         # Find reco tau with minimum dR from truth tau
         minTrueRecodR = float('inf')
@@ -196,7 +191,6 @@ def eventTruthMatchedTOBs(event, tree=None):
         for j in range(event.reco_SelectedTau_n):
             # Build reco vector
             recoVector = TVector3(0, 0, 0)
-            #recoVector.SetPtEtaPhi(event.reco_SelectedTau_tlv_pt[j], event.reco_SelectedTau_tlv_eta[j], event.reco_SelectedTau_tlv_phi[j])
             recoVector.SetPtEtaPhi(event.reco_SelectedTau_ETCalo[j], event.reco_SelectedTau_tlv_eta[j], event.reco_SelectedTau_tlv_phi[j])
             trueRecodR = trueVector.DeltaR(recoVector)
 
