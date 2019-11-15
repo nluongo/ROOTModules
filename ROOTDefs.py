@@ -371,26 +371,44 @@ def phi_flip_layer(layer):
             cell_et_holder[i][j] = layer.cell_et[i][phi_len - 1 - j]
     layer.cell_et = cell_et_holder
 
-def calculate_fcore(layer, fcore_core_def, fcore_isolation_def, seed_eta = -1, seed_phi = -1):
+def calculate_layer_fcore(layer, fcore_core_def, fcore_isolation_def, seed_eta = -1, seed_phi = -1):
     '''
-    Calculate FCore value for a given event and FCore definition
+    Calculate FCore value for a given layer and FCore definition
 
     :param layer: The custom Layer class instance for which FCore is being calculated
     :param fcore_core_def: List with two elements, [0] = eta core definition, [1] = phi core definition
     :param fcore_isolation_def: List with two elements, [0] = eta isolation definition, [1] = phi isolation definition
+    :param seed_eta: Eta position of the layer seed cell
+    :param seed_phi: Phi position of the layer seed cell
 
     :return: The float value of FCore
     '''
-    #Create single custom Layer class instance whose Et for each cell is the sum of the Et of corresponding cells in L1
-    #   and L2 layers
+    #Create single custom Layer class instance whose Et for each cell is the sum of the Et of corresponding cells in L1 and L2 layers
     core_et = layer_reco_et(layer, fcore_core_def[0], fcore_core_def[1], seed_eta, seed_phi)
     isolation_et = layer_reco_et(layer, fcore_isolation_def[0], fcore_isolation_def[1], seed_eta, seed_phi)
+    
     return (core_et / isolation_et)
+
+def calculate_fcore(event):
+    '''
+    Calculate FCore value for a given event and FCore definition. Depending on the evet flag set, FCore is calculated based only on the L2 layer or the combination of the L1 and L2 layers.
+
+    :param event: The custom Event class instance for which FCore is being calculated
+
+    :return: The float value of FCore
+    '''
+    if event.fcore_l1l2_layers == 0:
+        return calculate_layer_fcore(event.l2_layer, event.fcore_def[0], event.fcore_def[1], event.seed_eta, event.seed_phi)
+    elif event.fcore_l1l2_layers == 1:
+        l1l2_cells = event.l1_layer.cell_et + event.l2_layer.cell_et
+        l1l2_combined_layer = ROOTClassDefs.Layer(l1l2_cells, event.l1_layer.eta_dim, event.l1_layer.phi_dim) 
+        return calculate_layer_fcore(l1l2_combined_layer, event.fcore_def[0], event.fcore_def[1], event.seed_eta, event.seed_phi)
+    else:
+        raise ValueError('Unknown fcore_l1l2_layers value encountered: ', event.fcore_l1l2_layers)
 
 def find_histo_percent_bin(histo, percent):
     '''
-    Calculate the bin of a histogram above which the specified percentage of the histogram entries lie. Start from bin
-        0 and add events in each subsequent bin until the running sum exceeds the percentage of the total events
+    Calculate the bin of a histogram above which the specified percentage of the histogram entries lie. Start from bin 0 and add events in each subsequent bin until the running sum exceeds the percentage of the total events
     :param histo: Histogram object whose bin you want calculated
     :param percent: The percent of the histogram that should lie above the calculated bin, percent not decimal form
 
