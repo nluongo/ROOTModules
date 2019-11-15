@@ -10,10 +10,12 @@ class Layer:
     :param cell_et: Array of cell Ets
     :param eta_dim: Size of eta dimension
     :param phi_dim: Size of phi dimension
+    :param key: Integer value denoting the layer's place in an event
 
     :att cell_et: Array holding the Et of each cell
-    :att eta_dim: Length of the layer's ea dimension
+    :att eta_dim: Length of the layer's eta dimension
     :att phi_dim: Length of the layer's phi dimension
+    :att key: Integer denoting the layer's place in an event
     :att total_et: Total Et of layer, sum of Et of all cells in layer
     '''
     def __init__(self, cells, eta_dim, phi_dim, key = -1):
@@ -91,6 +93,7 @@ class Event:
 
         # Define definition for fcore core and isolation region passed down from tree
         self.fcore_def = tree.fcore_def
+        self.fcore_l1l2_layers = tree.fcore_l1l2_layers
 
         # Define layer weights for reconstructed Et passed down from tree
         self.reco_et_layer_weights = tree.reco_et_layer_weights
@@ -142,8 +145,8 @@ class Event:
 
         # If fcore flag was passed then calculate fcore using default definition
         if fcore_yn == 1:
-            self.fcore = ROOTDefs.calculate_fcore(self.l2_layer, self.fcore_def[0], self.fcore_def[1], self.seed_eta, self.seed_phi)
-
+            self.fcore = ROOTDefs.calculate_fcore(self)
+    
     # Load truth attributes from tree if they were not loaded when the event was created
     def load_truth(self):
         if hasattr(tree, 'mctau'):
@@ -174,7 +177,11 @@ class Event:
 
     def set_fcore_def(self, new_fcore_def):
         self.fcore_def = new_fcore_def
-        self.fcore = ROOTDefs.calculate_fcore(self.l2_layer, self.fcore_def[0], self.fcore_def[1], self.seed_eta, self.seed_phi)
+        self.fcore = ROOTDefs.calculate_fcore(self)
+
+    def set_fcore_l1l2_layers(self, new_fcore_l1l2_layers):
+        self.fcore_l1l2_layers = new_fcore_l1l2_layers
+        self.fcore = ROOTDefs.calculate_fcore(self)
 
     # Modify the values of layer weights used to calculate reconstructed Et
     def set_reco_et_layer_weights(self, new_layer_weights):
@@ -198,7 +205,7 @@ class Event:
 
         # Recalculate FCore
         if self.fcore_yn == 1:
-            self.fcore = ROOTDefs.calculate_fcore(self.l2_layer, self.fcore_def[0], self.fcore_def[1], self.seed_eta, self.seed_phi) 
+            self.fcore = ROOTDefs.calculate_fcore(self) 
 
     # DEPRECATED - Phi flipping now handled in layer_reco_et so that layer cells can be maintained as they actually are. Commented out but keeping for reference
     # If the off-phi is not concentrated in the 0 phi direction, then flip all layer so that it is and then recalculate all values that are orientation sensitive
@@ -245,6 +252,7 @@ class Tree:
         self.seed_region_def = [[4, 7], [1, 1]]
         self.adjacent_eta_cells = { 4: -1, 5: 0, 6: 0, 7: 1 }
         self.fcore_def = [[3, 2], [12, 3]]
+        self.fcore_l1l2_layers = 0
         self.reco_et_layer_weights = [1, 1, 1, 1, 1]
         self.reco_et_shift = 0
         self.iter_mctau = 0
