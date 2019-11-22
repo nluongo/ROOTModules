@@ -161,14 +161,15 @@ def isCentralTowerSeed(event):
     elif centralTowerEt <= getTowerEt(event, 0, 2) or centralTowerEt <= getTowerEt(event, 1, 2) or centralTowerEt <= getTowerEt(event, 2, 0) or centralTowerEt <= getTowerEt(event, 2, 1) or centralTowerEt <= getTowerEt(event, 2, 2):
         return 0
     else:
-        return 1
+        return 1 
 
 # Truth-match taus to TOBs
-def eventTruthMatchedTOBs(event, tree=None):
+def eventTruthMatchedTOBs(event, run, tree=None):
     '''
     Return TOBs that have been matched to true taus. Only TOBs that pass Run-II seeding will be matched
 
     :param event: Event in ROOT TTree holding truth, reco, and TOB information
+    :param run: Which run paradigm we are matching for, currently accepts 'Run2' or 'Run3'
     :param tree: Custom Tree class instance holding event settings
 
     :return: List of truth-matched TOBs, the first element of the list is the TOB and the second is the Pt of the true tau it has been matched to.
@@ -210,12 +211,19 @@ def eventTruthMatchedTOBs(event, tree=None):
         closestTOBNum = -1
         for k, tob in enumerate(event.efex_AllTOBs):
 
-            # 3.99 to be consistent with Josefina's code
-            #if not tob.ppmIsMaxCore(3.99):
-            #    continue
-            tob_event = event_from_tob(tree, tob)
-            if not isCentralTowerSeed(tob_event):
-                continue
+            if run == 'Run2':
+                # 3.99 to be consistent with Josefina's code
+                if not tob.ppmIsMaxCore(3.99):
+                    continue
+
+            elif run == 'Run3':
+                tob_event = event_from_tob(tree, tob)
+                if not isCentralTowerSeed(tob_event):
+                    continue
+
+            else:
+                print('Invalid run parameter in eventTruthMatchedTOBs, quitting...')
+                exit()
 
             tobVector = TVector3(0, 0, 0)
             tobVector.SetPtEtaPhi(tob.largeTauClus(), tob.eta(), tob.phi())
