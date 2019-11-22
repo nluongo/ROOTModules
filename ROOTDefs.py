@@ -386,8 +386,11 @@ def calculate_layer_fcore(layer, fcore_core_def, fcore_isolation_def, seed_eta =
     #Create single custom Layer class instance whose Et for each cell is the sum of the Et of corresponding cells in L1 and L2 layers
     core_et = layer_reco_et(layer, fcore_core_def[0], fcore_core_def[1], seed_eta, seed_phi)
     isolation_et = layer_reco_et(layer, fcore_isolation_def[0], fcore_isolation_def[1], seed_eta, seed_phi)
-    
-    return (core_et / isolation_et)
+   
+    if isolation_et == 0:
+        return -2
+    else:
+        return (core_et / isolation_et)
 
 def calculate_fcore(event):
     '''
@@ -399,10 +402,12 @@ def calculate_fcore(event):
     '''
     if event.fcore_l1l2_layers == 0:
         return calculate_layer_fcore(event.l2_layer, event.fcore_def[0], event.fcore_def[1], event.seed_eta, event.seed_phi)
+    
     elif event.fcore_l1l2_layers == 1:
         l1l2_cells = event.l1_layer.cell_et + event.l2_layer.cell_et
         l1l2_combined_layer = ROOTClassDefs.Layer(l1l2_cells, event.l1_layer.eta_dim, event.l1_layer.phi_dim) 
         return calculate_layer_fcore(l1l2_combined_layer, event.fcore_def[0], event.fcore_def[1], event.seed_eta, event.seed_phi)
+    
     else:
         raise ValueError('Unknown fcore_l1l2_layers value encountered: ', event.fcore_l1l2_layers)
 
