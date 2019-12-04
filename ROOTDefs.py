@@ -697,3 +697,18 @@ def multi_print(file_list, canvas, file_ending=''):
 
     for file_name in file_list:
         canvas.Print(file_name)
+
+def read_tfile_description(file_path, text_name='File Details'):
+    '''
+    Print out the text description, if present, stored in a custom-produced TFile
+
+    :param file_path: Path to file whose text description will be printed
+    :param text_name: Name given to the object in the TFile holding the description
+    '''
+    f = ROOT.TFile(file_path)
+    
+    d = f.Get('File Details')
+
+    print(d)
+
+
