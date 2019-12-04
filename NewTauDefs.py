@@ -271,6 +271,6 @@ def event_from_tob(tree, tob):
     l3_layer = load_root_layer_to_class(tree, l3_cells, 3)
     had_layer = load_root_layer_to_class(tree, had_cells, 4)
 
-    tob_event = Event(tree, l0_layer, l1_layer, l2_layer, l3_layer, had_layer, 0, 1, 0)
+    tob_event = Event(tree, l0_layer, l1_layer, l2_layer, l3_layer, had_layer, 0, 1, 1)
 
     return tob_event
