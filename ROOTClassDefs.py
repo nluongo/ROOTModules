@@ -86,8 +86,7 @@ class Event:
         else:
             self.phi_oriented = 0
 
-        # Define definition for when to include an adjacent eta cell in reconstructed Et based on seed cell position
-        #   passed down from Tree
+        # Define definition for when to include an adjacent eta cell in reconstructed Et based on seed cell position passed down from Tree
         self.adjacent_eta_cells = tree.adjacent_eta_cells
         self.adjacent_eta_direction = self.adjacent_eta_cells[self.seed_eta]
 
@@ -199,13 +198,21 @@ class Event:
         self.seed_phi = new_seed_phi
         self.seed_et = self.l2_layer.cell_et[self.seed_eta][self.seed_phi]
 
-        # Recalculate reconstruct Et
+        # Recalculate reconstructed Et
         if self.reco_et_yn == 1:
             self.reco_et = ROOTDefs.calc_reco_et(self)
 
         # Recalculate FCore
         if self.fcore_yn == 1:
             self.fcore = ROOTDefs.calculate_fcore(self) 
+
+    def set_adjacent_eta(self, adjacent_eta_cells):
+        self.adjacent_eta_cells = adjacent_eta_cells
+        self.adjacent_eta_direction = self.adjacent_eta_cells[self.seed_eta]
+        
+        # Recalculate reconstructed Et
+        if self.reco_et_yn == 1:
+            self.reco_et = ROOTDefs.calc_reco_et(self)
 
     # DEPRECATED - Phi flipping now handled in layer_reco_et so that layer cells can be maintained as they actually are. Commented out but keeping for reference
     # If the off-phi is not concentrated in the 0 phi direction, then flip all layer so that it is and then recalculate all values that are orientation sensitive
@@ -232,9 +239,6 @@ class Event:
     #        self.phi_oriented = 1
 
     # Search the L2 layer in the given eta/phi range for the cell with greatest Et and set coordinates to variables
-    def set_adjacent_eta(self, adjacent_eta_cells):
-        self.adjacent_eta_cells = adjacent_eta_cells
-        self.adjacent_eta_direction = self.adjacent_eta_cells[self.seed_eta]
 
 
 class Tree:
